@@ -1,0 +1,39 @@
+services:
+  db:
+    build: ./mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: myapp_development
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+  web:
+    build: ./rails
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b '0.0.0.0'"
+    volumes:
+      - .:/myapp
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  apache:
+    build: ./apache
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
