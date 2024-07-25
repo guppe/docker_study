@@ -1,4 +1,5 @@
 FROM ubuntu:latest
+ARG RUBYGEMS_VERSION=3.3.20
 
 # 必要なパッケージをインストール
 RUN apt-get update -qq && apt-get install -y \
@@ -11,7 +12,12 @@ RUN apt-get update -qq && apt-get install -y \
     libreadline-dev \
     zlib1g-dev \
     mysql-client \
-    git
+    git \
+    libxml2-dev \
+    libxslt1-dev \
+    libcurl4-openssl-dev \
+    libyaml-dev \
+    software-properties-common
 
 # Rubyをインストール
 RUN apt-get install -y ruby-full
@@ -23,11 +29,16 @@ RUN gem install bundler
 RUN mkdir /myapp
 WORKDIR /myapp
 
-# Railsをインストール
-RUN gem install rails
+# GemfileとGemfile.lockをコピー
+COPY Gemfile /myapp/Gemfile
+COPY Gemfile.lock /myapp/Gemfile.lock
 
-# Railsプロジェクトを作成
-RUN rails new . --force --database=mysql
+# Bundlerを実行
+RUN bundle update
+RUN bundle install
+
+# ソースコードをコピー
+COPY . /docker_study
 
 # ポートを公開
 EXPOSE 3000
